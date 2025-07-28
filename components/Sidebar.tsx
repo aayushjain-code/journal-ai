@@ -16,6 +16,8 @@ import {
   Trash2,
   X,
   Menu,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -87,12 +89,17 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Toggle Button - Always Visible */}
       <button
         onClick={onToggle}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-lg shadow-lg border border-gray-200"
+        className="fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        title={isOpen ? "Close Sidebar" : "Open Sidebar"}
       >
-        <Menu className="w-5 h-5 text-gray-700" />
+        {isOpen ? (
+          <ChevronLeft className="w-5 h-5 text-gray-700" />
+        ) : (
+          <ChevronRight className="w-5 h-5 text-gray-700" />
+        )}
       </button>
 
       {/* Overlay for mobile */}

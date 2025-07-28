@@ -354,11 +354,10 @@ export default function Home() {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, Entrepreneur! 🚀
+              Welcome back! 🚀
             </h1>
             <p className="text-gray-600">
-              Document your journey, track your goals, and let AI enhance your
-              vision. All data is stored locally in your browser.
+              Ready to document your journey and track your progress?
             </p>
           </motion.div>
 
