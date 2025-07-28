@@ -5,263 +5,529 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
-  Calendar,
   Target,
-  Heart,
-  Zap,
+  Calendar,
   Activity,
+  Zap,
+  Heart,
+  Clock,
+  Award,
+  TrendingDown,
+  AlertCircle,
+  CheckCircle,
+  Star,
+  Users,
+  Lightbulb,
 } from "lucide-react";
 import {
   LineChart,
   Line,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  AreaChart,
+  Area,
 } from "recharts";
 
+interface JournalEntry {
+  id: number;
+  title: string;
+  content: string;
+  mood: number;
+  energy: number;
+  category: string;
+  tags: string[];
+  timestamp: string;
+}
+
+interface Goal {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  targetDate?: string;
+  progress: number;
+  completed: boolean;
+  createdAt: string;
+}
+
 interface AnalyticsProps {
-  entries: any[];
-  goals: any[];
+  entries: JournalEntry[];
+  goals: Goal[];
+}
+
+interface LifeMetrics {
+  overallHappiness: number;
+  productivityScore: number;
+  consistencyScore: number;
+  growthRate: number;
+  stressLevel: number;
+  workLifeBalance: number;
 }
 
 export default function Analytics({ entries, goals }: AnalyticsProps) {
-  const [timeRange, setTimeRange] = useState("30");
-  const [chartData, setChartData] = useState<any>(null);
+  const [metrics, setMetrics] = useState<LifeMetrics | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState("week");
 
   useEffect(() => {
-    if (entries.length > 0) {
-      generateChartData();
+    if (entries.length > 0 || goals.length > 0) {
+      calculateMetrics();
     }
-  }, [entries, timeRange]);
+  }, [entries, goals, selectedPeriod]);
 
-  const generateChartData = () => {
-    const days = parseInt(timeRange);
-    const data = [];
-
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
-
-      const dayEntries = entries.filter(
-        (entry) => entry.timestamp && entry.timestamp.startsWith(dateStr)
-      );
-
-      data.push({
-        date: date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-        mood:
-          dayEntries.length > 0
-            ? dayEntries.reduce((sum, entry) => sum + entry.mood, 0) /
-              dayEntries.length
-            : 0,
-        energy:
-          dayEntries.length > 0
-            ? dayEntries.reduce((sum, entry) => sum + entry.energy, 0) /
-              dayEntries.length
-            : 0,
-        entries: dayEntries.length,
-      });
+  const calculateMetrics = () => {
+    if (entries.length === 0 && goals.length === 0) {
+      setMetrics(null);
+      return;
     }
 
-    setChartData(data);
+    // Calculate overall happiness (average mood)
+    const avgMood =
+      entries.length > 0
+        ? entries.reduce((sum, e) => sum + e.mood, 0) / entries.length
+        : 5;
+
+    // Calculate productivity score
+    const completedGoals = goals.filter((g) => g.completed).length;
+    const totalGoals = goals.length;
+    const goalCompletionRate =
+      totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+    const avgEnergy =
+      entries.length > 0
+        ? entries.reduce((sum, e) => sum + e.energy, 0) / entries.length
+        : 5;
+    const productivityScore = Math.round(
+      (goalCompletionRate + avgEnergy * 10) / 2
+    );
+
+    // Calculate consistency score
+    const recentEntries = entries.slice(-7);
+    const consistencyScore =
+      recentEntries.length >= 5 ? 85 : recentEntries.length >= 3 ? 60 : 30;
+
+    // Calculate growth rate
+    const recentMoods = entries.slice(-5).map((e) => e.mood);
+    const growthRate =
+      recentMoods.length >= 2
+        ? ((recentMoods[recentMoods.length - 1] - recentMoods[0]) /
+            recentMoods[0]) *
+          100
+        : 0;
+
+    // Calculate stress level (inverse of energy and mood)
+    const stressLevel = Math.max(0, 100 - (avgMood + avgEnergy) * 5);
+
+    // Calculate work-life balance
+    const businessEntries = entries.filter(
+      (e) => e.category === "business"
+    ).length;
+    const personalEntries = entries.filter(
+      (e) => e.category === "personal"
+    ).length;
+    const totalEntries = entries.length;
+    const workLifeBalance =
+      totalEntries > 0
+        ? Math.abs(50 - (businessEntries / totalEntries) * 100)
+        : 50;
+
+    setMetrics({
+      overallHappiness: Math.round(avgMood * 10),
+      productivityScore,
+      consistencyScore,
+      growthRate: Math.round(growthRate),
+      stressLevel: Math.round(stressLevel),
+      workLifeBalance: Math.round(workLifeBalance),
+    });
+  };
+
+  const getMoodData = () => {
+    const recentEntries = entries.slice(-7);
+    return recentEntries.map((entry, index) => ({
+      day: new Date(entry.timestamp).toLocaleDateString("en-US", {
+        weekday: "short",
+      }),
+      mood: entry.mood,
+      energy: entry.energy,
+      date: new Date(entry.timestamp).toLocaleDateString(),
+    }));
   };
 
   const getCategoryData = () => {
-    const categoryCounts = entries.reduce((acc, entry) => {
-      acc[entry.category] = (acc[entry.category] || 0) + 1;
-      return acc;
-    }, {});
+    const categoryCounts: Record<string, number> = {};
+    entries.forEach((entry) => {
+      categoryCounts[entry.category] =
+        (categoryCounts[entry.category] || 0) + 1;
+    });
 
     return Object.entries(categoryCounts).map(([category, count]) => ({
       name: category,
       value: count,
+      color: getCategoryColor(category),
     }));
   };
 
   const getGoalProgressData = () => {
-    return goals.map((goal) => ({
-      name: goal.title,
-      progress: goal.progress || 0,
+    const categoryProgress: Record<
+      string,
+      { completed: number; total: number }
+    > = {};
+    goals.forEach((goal) => {
+      if (!categoryProgress[goal.category]) {
+        categoryProgress[goal.category] = { completed: 0, total: 0 };
+      }
+      categoryProgress[goal.category].total++;
+      if (goal.completed) {
+        categoryProgress[goal.category].completed++;
+      }
+    });
+
+    return Object.entries(categoryProgress).map(([category, data]) => ({
+      category,
+      progress: data.total > 0 ? (data.completed / data.total) * 100 : 0,
+      completed: data.completed,
+      total: data.total,
     }));
   };
 
   const getMoodDistribution = () => {
-    const moodCounts = entries.reduce((acc, entry) => {
-      const mood = Math.floor(entry.mood / 2) * 2; // Group into ranges
-      acc[mood] = (acc[mood] || 0) + 1;
-      return acc;
-    }, {});
+    const distribution = { low: 0, medium: 0, high: 0 };
+    entries.forEach((entry) => {
+      if (entry.mood <= 3) distribution.low++;
+      else if (entry.mood <= 7) distribution.medium++;
+      else distribution.high++;
+    });
 
-    return Object.entries(moodCounts).map(([mood, count]) => ({
-      name: `${mood}-${parseInt(mood) + 1}`,
-      value: count,
-    }));
+    return [
+      { name: "Low (1-3)", value: distribution.low, color: "#ef4444" },
+      { name: "Medium (4-7)", value: distribution.medium, color: "#f59e0b" },
+      { name: "High (8-10)", value: distribution.high, color: "#10b981" },
+    ];
   };
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
-
-  const stats = {
-    totalEntries: entries.length,
-    avgMood:
-      entries.length > 0
-        ? (
-            entries.reduce((sum, entry) => sum + entry.mood, 0) / entries.length
-          ).toFixed(1)
-        : 0,
-    avgEnergy:
-      entries.length > 0
-        ? (
-            entries.reduce((sum, entry) => sum + entry.energy, 0) /
-            entries.length
-          ).toFixed(1)
-        : 0,
-    totalGoals: goals.length,
-    completedGoals: goals.filter((goal) => goal.completed).length,
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      business: "#3b82f6",
+      personal: "#10b981",
+      goals: "#8b5cf6",
+      ideas: "#f59e0b",
+      general: "#6b7280",
+    };
+    return colors[category] || colors.general;
   };
 
-  if (entries.length === 0) {
+  const getMetricStatus = (value: number, type: string) => {
+    if (type === "stress") {
+      return value < 30 ? "excellent" : value < 60 ? "good" : "needs_attention";
+    }
+    return value >= 80 ? "excellent" : value >= 60 ? "good" : "needs_attention";
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "excellent":
+        return <Star className="w-5 h-5 text-green-500" />;
+      case "good":
+        return <CheckCircle className="w-5 h-5 text-blue-500" />;
+      case "needs_attention":
+        return <AlertCircle className="w-5 h-5 text-orange-500" />;
+      default:
+        return <Activity className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const getImprovementSuggestions = () => {
+    if (!metrics) return [];
+
+    const suggestions = [];
+
+    if (metrics.overallHappiness < 70) {
+      suggestions.push("Practice gratitude journaling daily");
+      suggestions.push("Schedule activities that bring you joy");
+      suggestions.push("Consider meditation or mindfulness exercises");
+    }
+
+    if (metrics.productivityScore < 60) {
+      suggestions.push("Break down large tasks into smaller, manageable steps");
+      suggestions.push("Set specific, measurable deadlines for your goals");
+      suggestions.push("Celebrate small wins to maintain motivation");
+    }
+
+    if (metrics.consistencyScore < 50) {
+      suggestions.push("Establish a daily journaling routine");
+      suggestions.push("Set reminders to check in with yourself");
+      suggestions.push("Make journaling a non-negotiable part of your day");
+    }
+
+    if (metrics.stressLevel > 60) {
+      suggestions.push(
+        "Practice stress-reduction techniques like deep breathing"
+      );
+      suggestions.push("Ensure adequate sleep and rest periods");
+      suggestions.push("Consider professional support if stress persists");
+    }
+
+    if (metrics.workLifeBalance > 70) {
+      suggestions.push(
+        "Strive for better balance between work and personal life"
+      );
+      suggestions.push("Schedule dedicated personal time");
+      suggestions.push("Set boundaries between work and personal activities");
+    }
+
+    return suggestions;
+  };
+
+  if (entries.length === 0 && goals.length === 0) {
     return (
-      <div className="text-center py-12">
-        <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          No Data for Analytics
-        </h3>
-        <p className="text-gray-500">
-          Start writing journal entries to see your analytics.
-        </p>
+      <div className="space-y-6">
+        <div className="flex items-center space-x-3">
+          <BarChart3 className="w-8 h-8 text-primary-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Life Analytics</h2>
+        </div>
+
+        <div className="card text-center py-12">
+          <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Data to Analyze
+          </h3>
+          <p className="text-gray-500">
+            Start journaling and setting goals to see detailed analytics.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Analytics Dashboard
-        </h2>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="input-field w-auto"
-        >
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <BarChart3 className="w-8 h-8 text-primary-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Life Analytics</h2>
+        </div>
+
+        <div className="flex space-x-2">
+          {["week", "month", "all"].map((period) => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                selectedPeriod === period
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {period.charAt(0).toUpperCase() + period.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Key Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card"
-        >
-          <div className="flex items-center">
-            <Calendar className="w-8 h-8 text-blue-500 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Total Entries</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.totalEntries}
-              </p>
+      {/* Key Life Metrics */}
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Heart className="w-6 h-6 text-red-500" />
+                <h3 className="font-semibold text-gray-900">Happiness Score</h3>
+              </div>
+              {getStatusIcon(
+                getMetricStatus(metrics.overallHappiness, "happiness")
+              )}
             </div>
-          </div>
-        </motion.div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {metrics.overallHappiness}/100
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${metrics.overallHappiness}%` }}
+              />
+            </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card"
-        >
-          <div className="flex items-center">
-            <Heart className="w-8 h-8 text-red-500 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Avg Mood</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.avgMood}/10
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Target className="w-6 h-6 text-green-500" />
+                <h3 className="font-semibold text-gray-900">Productivity</h3>
+              </div>
+              {getStatusIcon(
+                getMetricStatus(metrics.productivityScore, "productivity")
+              )}
             </div>
-          </div>
-        </motion.div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {metrics.productivityScore}/100
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${metrics.productivityScore}%` }}
+              />
+            </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card"
-        >
-          <div className="flex items-center">
-            <Zap className="w-8 h-8 text-yellow-500 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Avg Energy</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.avgEnergy}/10
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-6 h-6 text-blue-500" />
+                <h3 className="font-semibold text-gray-900">Consistency</h3>
+              </div>
+              {getStatusIcon(
+                getMetricStatus(metrics.consistencyScore, "consistency")
+              )}
             </div>
-          </div>
-        </motion.div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {metrics.consistencyScore}/100
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${metrics.consistencyScore}%` }}
+              />
+            </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="card"
-        >
-          <div className="flex items-center">
-            <Target className="w-8 h-8 text-green-500 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Goals Progress</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.completedGoals}/{stats.totalGoals}
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="w-6 h-6 text-purple-500" />
+                <h3 className="font-semibold text-gray-900">Growth Rate</h3>
+              </div>
+              {metrics.growthRate > 0 ? (
+                <TrendingUp className="w-5 h-5 text-green-500" />
+              ) : (
+                <TrendingDown className="w-5 h-5 text-red-500" />
+              )}
             </div>
-          </div>
-        </motion.div>
-      </div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {metrics.growthRate > 0 ? "+" : ""}
+              {metrics.growthRate}%
+            </div>
+            <p className="text-sm text-gray-500">
+              {metrics.growthRate > 0
+                ? "Improving"
+                : metrics.growthRate < 0
+                ? "Declining"
+                : "Stable"}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-6 h-6 text-orange-500" />
+                <h3 className="font-semibold text-gray-900">Stress Level</h3>
+              </div>
+              {getStatusIcon(getMetricStatus(metrics.stressLevel, "stress"))}
+            </div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {metrics.stressLevel}/100
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${metrics.stressLevel}%` }}
+              />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="card"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Users className="w-6 h-6 text-indigo-500" />
+                <h3 className="font-semibold text-gray-900">
+                  Work-Life Balance
+                </h3>
+              </div>
+              {getStatusIcon(
+                getMetricStatus(100 - metrics.workLifeBalance, "balance")
+              )}
+            </div>
+            <div className="text-3xl font-bold text-primary-600 mb-2">
+              {Math.round(100 - metrics.workLifeBalance)}/100
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${100 - metrics.workLifeBalance}%` }}
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Mood & Energy Trend */}
+        {/* Mood & Energy Trends */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
           className="card"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Mood & Energy Trends
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
+            <AreaChart data={getMoodData()}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
+              <XAxis dataKey="day" />
+              <YAxis domain={[0, 10]} />
               <Tooltip />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="mood"
-                stroke="#ef4444"
-                strokeWidth={2}
+                stroke="#3b82f6"
+                fill="#3b82f6"
+                fillOpacity={0.3}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="energy"
-                stroke="#f59e0b"
-                strokeWidth={2}
+                stroke="#10b981"
+                fill="#10b981"
+                fillOpacity={0.3}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </motion.div>
 
@@ -269,7 +535,7 @@ export default function Analytics({ entries, goals }: AnalyticsProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.7 }}
           className="card"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -290,10 +556,7 @@ export default function Analytics({ entries, goals }: AnalyticsProps) {
                 dataKey="value"
               >
                 {getCategoryData().map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip />
@@ -302,29 +565,6 @@ export default function Analytics({ entries, goals }: AnalyticsProps) {
         </motion.div>
 
         {/* Goal Progress */}
-        {goals.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="card"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Goal Progress
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={getGoalProgressData()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="progress" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
-        )}
-
-        {/* Mood Distribution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -332,76 +572,80 @@ export default function Analytics({ entries, goals }: AnalyticsProps) {
           className="card"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Goal Progress by Category
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={getGoalProgressData()}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Bar dataKey="progress" fill="#8b5cf6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Mood Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="card"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Mood Distribution
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getMoodDistribution()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+            <PieChart>
+              <Pie
+                data={getMoodDistribution()}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {getMoodDistribution().map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
               <Tooltip />
-              <Bar dataKey="value" fill="#10b981" />
-            </BarChart>
+            </PieChart>
           </ResponsiveContainer>
         </motion.div>
       </div>
 
-      {/* Activity Heatmap */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-        className="card"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Activity Heatmap
-        </h3>
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: parseInt(timeRange) }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - (parseInt(timeRange) - 1 - i));
-            const dateStr = date.toISOString().split("T")[0];
-            const dayEntries = entries.filter(
-              (entry) => entry.timestamp && entry.timestamp.startsWith(dateStr)
-            );
-            const intensity =
-              dayEntries.length > 0 ? Math.min(dayEntries.length * 2, 10) : 0;
-
-            return (
-              <div
-                key={i}
-                className={`h-8 rounded text-xs flex items-center justify-center ${
-                  intensity === 0
-                    ? "bg-gray-100"
-                    : intensity <= 2
-                    ? "bg-green-200"
-                    : intensity <= 4
-                    ? "bg-green-400"
-                    : intensity <= 6
-                    ? "bg-green-600"
-                    : "bg-green-800 text-white"
-                }`}
-                title={`${date.toLocaleDateString()}: ${
-                  dayEntries.length
-                } entries`}
-              >
-                {dayEntries.length > 0 ? dayEntries.length : ""}
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex items-center justify-center mt-4 space-x-4 text-sm text-gray-600">
-          <span>Less</span>
-          <div className="flex space-x-1">
-            <div className="w-4 h-4 bg-gray-100 rounded"></div>
-            <div className="w-4 h-4 bg-green-200 rounded"></div>
-            <div className="w-4 h-4 bg-green-400 rounded"></div>
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
-            <div className="w-4 h-4 bg-green-800 rounded"></div>
+      {/* Improvement Suggestions */}
+      {metrics && getImprovementSuggestions().length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="card"
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <Lightbulb className="w-6 h-6 text-yellow-500" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Life Improvement Suggestions
+            </h3>
           </div>
-          <span>More</span>
-        </div>
-      </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {getImprovementSuggestions().map((suggestion, index) => (
+              <div
+                key={index}
+                className="flex items-start space-x-3 p-3 bg-primary-50 rounded-lg"
+              >
+                <CheckCircle className="w-5 h-5 text-primary-600 mt-0.5" />
+                <p className="text-sm text-gray-700">{suggestion}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

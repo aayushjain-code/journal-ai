@@ -17,6 +17,7 @@ import GoalTracker from "@/components/GoalTracker";
 import AIInsights from "@/components/AIInsights";
 import VisionBoard from "@/components/VisionBoard";
 import Analytics from "@/components/Analytics";
+import LifeCoach from "@/components/LifeCoach";
 import Sidebar from "@/components/Sidebar";
 import StorageInfo from "@/components/StorageInfo";
 import toast from "react-hot-toast";
@@ -196,27 +197,39 @@ export default function Home() {
     }
   };
 
-  const handleImportData = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = importData(e.target?.result as string);
-
-        if (data) {
-          setEntries(data.entries);
-          setGoals(data.goals);
-          saveToLocalStorage(STORAGE_KEYS.JOURNAL_ENTRIES, data.entries);
-          saveToLocalStorage(STORAGE_KEYS.GOALS, data.goals);
-          toast.success("Data imported successfully!");
-        } else {
-          toast.error("Invalid data format. Please check the file.");
-        }
-      } catch (error) {
-        console.error("Import error:", error);
-        toast.error("Failed to import data. Please check the file format.");
+  const handleImport = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const jsonString = e.target?.result as string;
+            const importedData = importData(jsonString);
+            if (importedData) {
+              setEntries(importedData.entries);
+              setGoals(importedData.goals);
+              saveToLocalStorage(
+                STORAGE_KEYS.JOURNAL_ENTRIES,
+                importedData.entries
+              );
+              saveToLocalStorage(STORAGE_KEYS.GOALS, importedData.goals);
+              toast.success("Data imported successfully!");
+            } else {
+              toast.error("Invalid file format");
+            }
+          } catch (error) {
+            console.error("Import error:", error);
+            toast.error("Failed to import data");
+          }
+        };
+        reader.readAsText(file);
       }
     };
-    reader.readAsText(file);
+    input.click();
   };
 
   const renderContent = () => {
@@ -251,6 +264,8 @@ export default function Home() {
         return <VisionBoard />;
       case "analytics":
         return <Analytics entries={entries} goals={goals} />;
+      case "coach":
+        return <LifeCoach entries={entries} goals={goals} />;
       default:
         return (
           <div className="space-y-6">
@@ -281,9 +296,9 @@ export default function Home() {
     <div className="flex h-screen bg-gray-50">
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        onTabChange={setActiveTab}
         onExport={handleExportData}
-        onImport={handleImportData}
+        onImport={handleImport}
         onClear={handleClearLocalStorage}
       />
 
