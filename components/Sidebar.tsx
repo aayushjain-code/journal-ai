@@ -18,6 +18,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +41,7 @@ const tabs = [
   { id: "coach", label: "Life Coach", icon: User },
   { id: "health", label: "Health & Fitness", icon: Activity },
   { id: "finance", label: "Finance", icon: DollarSign },
+  { id: "profile", label: "Profile", icon: Settings },
 ];
 
 export default function Sidebar({

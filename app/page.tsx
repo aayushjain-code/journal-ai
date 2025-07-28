@@ -31,6 +31,7 @@ import {
 import HealthFitness from "@/components/HealthFitness";
 import Finance from "@/components/Finance";
 import OnboardingForm from "@/components/OnboardingForm";
+import ProfilePage from "@/components/ProfilePage";
 
 // Define types for our data structures
 interface JournalEntry {
@@ -261,6 +262,18 @@ export default function Home() {
       case "journal":
         return (
           <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back! 🚀
+              </h1>
+              <p className="text-gray-600">
+                Ready to document your journey and track your progress?
+              </p>
+            </motion.div>
             <JournalEntry
               onSave={saveEntry}
               onUpdate={updateEntry}
@@ -273,11 +286,24 @@ export default function Home() {
       case "goals":
         return (
           <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Goal Tracker 🎯
+              </h1>
+              <p className="text-gray-600">
+                Set, track, and achieve your goals with smart progress
+                monitoring.
+              </p>
+            </motion.div>
             <GoalTracker
-              goals={goals}
               onSave={saveGoal}
               onUpdate={updateGoal}
               onDelete={deleteGoal}
+              goals={goals}
             />
             <StorageInfo />
           </div>
@@ -294,18 +320,10 @@ export default function Home() {
         return <HealthFitness entries={entries} goals={goals} />;
       case "finance":
         return <Finance entries={entries} goals={goals} />;
+      case "profile":
+        return <ProfilePage onBack={() => setActiveTab("journal")} />;
       default:
-        return (
-          <div className="space-y-6">
-            <JournalEntry
-              onSave={saveEntry}
-              onUpdate={updateEntry}
-              onDelete={deleteEntry}
-              entries={entries}
-            />
-            <StorageInfo />
-          </div>
-        );
+        return <div>Page not found</div>;
     }
   };
 
@@ -346,23 +364,7 @@ export default function Home() {
           onToggle={toggleSidebar}
         />
 
-        <main className="flex-1 p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back! 🚀
-            </h1>
-            <p className="text-gray-600">
-              Ready to document your journey and track your progress?
-            </p>
-          </motion.div>
-
-          {renderContent()}
-        </main>
+        <main className="flex-1 p-6">{renderContent()}</main>
       </div>
     </div>
   );
