@@ -280,6 +280,80 @@ export default function Finance({ entries, goals }: FinanceProps) {
   const monthlyExpenses = getMonthlyExpenses();
   const monthlySavings = monthlyIncome - monthlyExpenses;
 
+  // Financial Suggestions for Indian Entrepreneurs
+  const getFinancialSuggestions = () => {
+    const suggestions = [];
+
+    // Emergency Fund Check
+    const emergencyFund = assets
+      .filter(
+        (a) =>
+          a.name.toLowerCase().includes("emergency") ||
+          a.name.toLowerCase().includes("savings")
+      )
+      .reduce((sum, a) => sum + a.value, 0);
+    const monthlyExpense = monthlyExpenses;
+    if (emergencyFund < monthlyExpense * 6) {
+      suggestions.push({
+        type: "warning",
+        title: "Build Emergency Fund",
+        description: `You need ₹${(
+          monthlyExpense * 6 -
+          emergencyFund
+        ).toLocaleString()} more for a 6-month emergency fund`,
+        action: "Set aside 20% of income monthly",
+      });
+    }
+
+    // Debt Management
+    const totalDebt = liabilities.reduce((sum, l) => sum + l.amount, 0);
+    const debtToIncomeRatio = totalDebt / (monthlyIncome * 12);
+    if (debtToIncomeRatio > 0.4) {
+      suggestions.push({
+        type: "alert",
+        title: "High Debt Ratio",
+        description: `Your debt is ${(debtToIncomeRatio * 100).toFixed(
+          1
+        )}% of annual income`,
+        action: "Focus on debt repayment before new investments",
+      });
+    }
+
+    // Investment Opportunities
+    if (monthlySavings > 50000) {
+      suggestions.push({
+        type: "success",
+        title: "Investment Opportunity",
+        description: `You're saving ₹${monthlySavings.toLocaleString()} monthly`,
+        action: "Consider SIP in mutual funds or ELSS for tax benefits",
+      });
+    }
+
+    // Tax Planning
+    if (monthlyIncome > 100000) {
+      suggestions.push({
+        type: "info",
+        title: "Tax Planning",
+        description: "High income bracket - optimize tax deductions",
+        action: "Maximize 80C, 80D, HRA, and business deductions",
+      });
+    }
+
+    // Business Investment
+    if (netWorth > 1000000) {
+      suggestions.push({
+        type: "success",
+        title: "Business Expansion",
+        description: "Strong financial position for business growth",
+        action: "Consider business loans or equity investment",
+      });
+    }
+
+    return suggestions;
+  };
+
+  const suggestions = getFinancialSuggestions();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -305,7 +379,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
               netWorth >= 0 ? "text-green-600" : "text-red-600"
             }`}
           >
-            ${netWorth.toLocaleString()}
+            ₹{netWorth.toLocaleString()}
           </p>
         </motion.div>
 
@@ -320,7 +394,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
             Monthly Income
           </h3>
           <p className="text-3xl font-bold text-blue-600">
-            ${monthlyIncome.toLocaleString()}
+            ₹{monthlyIncome.toLocaleString()}
           </p>
         </motion.div>
 
@@ -335,7 +409,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
             Monthly Expenses
           </h3>
           <p className="text-3xl font-bold text-red-600">
-            ${monthlyExpenses.toLocaleString()}
+            ₹{monthlyExpenses.toLocaleString()}
           </p>
         </motion.div>
 
@@ -354,10 +428,75 @@ export default function Finance({ entries, goals }: FinanceProps) {
               monthlySavings >= 0 ? "text-purple-600" : "text-red-600"
             }`}
           >
-            ${monthlySavings.toLocaleString()}
+            ₹{monthlySavings.toLocaleString()}
           </p>
         </motion.div>
       </div>
+
+      {/* Financial Suggestions */}
+      {suggestions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Award className="w-5 h-5 mr-2 text-yellow-500" />
+            Financial Suggestions for Indian Entrepreneurs
+          </h3>
+          <div className="space-y-4">
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border-l-4 ${
+                  suggestion.type === "warning"
+                    ? "bg-yellow-50 border-yellow-400"
+                    : suggestion.type === "alert"
+                    ? "bg-red-50 border-red-400"
+                    : suggestion.type === "success"
+                    ? "bg-green-50 border-green-400"
+                    : "bg-blue-50 border-blue-400"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">
+                      {suggestion.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {suggestion.description}
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 mt-2">
+                      💡 {suggestion.action}
+                    </p>
+                  </div>
+                  <div
+                    className={`ml-4 ${
+                      suggestion.type === "warning"
+                        ? "text-yellow-600"
+                        : suggestion.type === "alert"
+                        ? "text-red-600"
+                        : suggestion.type === "success"
+                        ? "text-green-600"
+                        : "text-blue-600"
+                    }`}
+                  >
+                    {suggestion.type === "warning" ? (
+                      <AlertCircle className="w-5 h-5" />
+                    ) : suggestion.type === "alert" ? (
+                      <AlertCircle className="w-5 h-5" />
+                    ) : suggestion.type === "success" ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <Award className="w-5 h-5" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
@@ -411,7 +550,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                     </div>
                   </div>
                   <span className="font-semibold text-green-600">
-                    ${asset.value.toLocaleString()}
+                    ₹{asset.value.toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -449,7 +588,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                     </div>
                   </div>
                   <span className="font-semibold text-red-600">
-                    ${liability.amount.toLocaleString()}
+                    ₹{liability.amount.toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -516,7 +655,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                   {asset.name}
                 </h4>
                 <p className="text-2xl font-bold text-green-600 mb-2">
-                  ${asset.value.toLocaleString()}
+                  ₹{asset.value.toLocaleString()}
                 </p>
 
                 {asset.notes && (
@@ -586,7 +725,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                   {liability.name}
                 </h4>
                 <p className="text-2xl font-bold text-red-600 mb-2">
-                  ${liability.amount.toLocaleString()}
+                  ₹{liability.amount.toLocaleString()}
                 </p>
 
                 {liability.notes && (
@@ -661,7 +800,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                             : "text-red-600"
                         }`}
                       >
-                        {transaction.type === "income" ? "+" : "-"}$
+                        {transaction.type === "income" ? "+" : "-"}₹
                         {transaction.amount.toLocaleString()}
                       </span>
                       <button
@@ -735,7 +874,7 @@ export default function Finance({ entries, goals }: FinanceProps) {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Progress</span>
                     <span className="font-medium">
-                      ${goal.currentAmount.toLocaleString()}/$
+                      ₹{goal.currentAmount.toLocaleString()}/₹
                       {goal.targetAmount.toLocaleString()}
                     </span>
                   </div>
@@ -776,7 +915,7 @@ function AssetForm({
     name: "",
     type: "cash",
     value: 0,
-    currency: "USD",
+    currency: "INR",
     notes: "",
   });
 
@@ -835,10 +974,10 @@ function AssetForm({
             }
             className="input-field"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
           </select>
         </div>
       </div>
@@ -894,7 +1033,7 @@ function LiabilityForm({
     name: "",
     type: "credit_card",
     amount: 0,
-    currency: "USD",
+    currency: "INR",
     notes: "",
   });
 
@@ -951,10 +1090,10 @@ function LiabilityForm({
             }
             className="input-field"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
           </select>
         </div>
       </div>
@@ -1010,7 +1149,7 @@ function TransactionForm({
     type: "expense",
     category: "",
     amount: 0,
-    currency: "USD",
+    currency: "INR",
     description: "",
   });
 
@@ -1052,10 +1191,10 @@ function TransactionForm({
             }
             className="input-field"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
           </select>
         </div>
       </div>
@@ -1073,8 +1212,8 @@ function TransactionForm({
           className="input-field"
           placeholder={
             formData.type === "income"
-              ? "e.g., Salary, Freelance"
-              : "e.g., Food, Transport"
+              ? "e.g., Salary, Freelance, Business"
+              : "e.g., Food, Transport, Rent, EMI"
           }
         />
       </div>
@@ -1133,7 +1272,7 @@ function FinancialGoalForm({
     title: "",
     targetAmount: 0,
     currentAmount: 0,
-    currency: "USD",
+    currency: "INR",
     deadline: "",
   });
 
@@ -1158,7 +1297,7 @@ function FinancialGoalForm({
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="input-field"
-          placeholder="e.g., Emergency Fund, Vacation Savings"
+          placeholder="e.g., Emergency Fund, Home Down Payment, Business Investment"
         />
       </div>
 
@@ -1212,10 +1351,10 @@ function FinancialGoalForm({
             }
             className="input-field"
           >
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
+            <option value="INR">₹ INR</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
           </select>
         </div>
 
