@@ -81,7 +81,7 @@ export default function VisionBoard() {
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       business: "bg-blue-100 text-blue-800 border-blue-200",
       personal: "bg-green-100 text-green-800 border-green-200",
       financial: "bg-purple-100 text-purple-800 border-purple-200",

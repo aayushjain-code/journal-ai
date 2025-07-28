@@ -63,7 +63,7 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
     }, {});
 
     const topTags = Object.entries(tagCounts)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
       .slice(0, 5)
       .map(([tag]) => tag);
 
@@ -73,8 +73,9 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
         avgMood > 7 ? "positive" : avgMood > 5 ? "stable" : "needs_attention",
       energyLevel: avgEnergy > 7 ? "high" : avgEnergy > 5 ? "moderate" : "low",
       topCategory:
-        Object.entries(categoryCounts).sort(([, a], [, b]) => b - a)[0]?.[0] ||
-        "general",
+        Object.entries(categoryCounts).sort(
+          ([, a], [, b]) => (b as number) - (a as number)
+        )[0]?.[0] || "general",
       topTags,
       recommendations: generateRecommendations(
         avgMood,
@@ -179,7 +180,7 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
   };
 
   const getInsightColor = (type: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       positive: "text-green-600 bg-green-50",
       negative: "text-red-600 bg-red-50",
       neutral: "text-blue-600 bg-blue-50",
@@ -310,7 +311,7 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
                 AI Recommendations
               </h3>
               <div className="space-y-4">
-                {insights.recommendations.map((rec, index) => {
+                {insights.recommendations.map((rec: any, index: number) => {
                   const Icon = rec.icon;
                   return (
                     <div
@@ -355,7 +356,7 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
                 Detected Patterns
               </h3>
               <div className="space-y-3">
-                {insights.patterns.map((pattern, index) => (
+                {insights.patterns.map((pattern: any, index: number) => (
                   <div
                     key={index}
                     className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
@@ -395,7 +396,7 @@ export default function AIInsights({ entries, goals }: AIInsightsProps) {
                 Frequent Topics
               </h3>
               <div className="flex flex-wrap gap-2">
-                {insights.topTags.map((tag, index) => (
+                {insights.topTags.map((tag: string, index: number) => (
                   <span
                     key={index}
                     className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm font-medium"

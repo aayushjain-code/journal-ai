@@ -16,11 +16,22 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+export interface JournalEntryType {
+  id: number;
+  title: string;
+  content: string;
+  mood: number;
+  energy: number;
+  category: string;
+  tags: string[];
+  timestamp: string;
+}
+
 interface JournalEntryProps {
-  onSave: (entry: any) => void;
-  onUpdate?: (entryId: number, updatedEntry: any) => void;
+  onSave: (entry: Omit<JournalEntryType, "id" | "timestamp">) => void;
+  onUpdate?: (entryId: number, updatedEntry: Partial<JournalEntryType>) => void;
   onDelete?: (entryId: number) => void;
-  entries: any[];
+  entries: JournalEntryType[];
 }
 
 export default function JournalEntry({
@@ -30,14 +41,18 @@ export default function JournalEntry({
   entries,
 }: JournalEntryProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [editingEntry, setEditingEntry] = useState<JournalEntryType | null>(
+    null
+  );
+  const [formData, setFormData] = useState<
+    Omit<JournalEntryType, "id" | "timestamp">
+  >({
     title: "",
     content: "",
     mood: 5,
     energy: 5,
     category: "general",
-    tags: "",
+    tags: "" as any, // will be split to string[]
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,10 +64,10 @@ export default function JournalEntry({
 
     const entry = {
       ...formData,
-      tags: formData.tags
+      tags: (formData.tags as any as string)
         .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag),
+        .map((tag: string) => tag.trim())
+        .filter((tag: string) => tag),
     };
 
     if (editingEntry) {
@@ -68,12 +83,12 @@ export default function JournalEntry({
       mood: 5,
       energy: 5,
       category: "general",
-      tags: "",
+      tags: "" as any,
     });
     setIsFormOpen(false);
   };
 
-  const handleEdit = (entry: any) => {
+  const handleEdit = (entry: JournalEntryType) => {
     setEditingEntry(entry);
     setFormData({
       title: entry.title,
@@ -81,7 +96,7 @@ export default function JournalEntry({
       mood: entry.mood,
       energy: entry.energy,
       category: entry.category,
-      tags: entry.tags ? entry.tags.join(", ") : "",
+      tags: entry.tags ? entry.tags.join(", ") : ("" as any),
     });
     setIsFormOpen(true);
   };
@@ -104,7 +119,7 @@ export default function JournalEntry({
       mood: 5,
       energy: 5,
       category: "general",
-      tags: "",
+      tags: "" as any,
     });
     setIsFormOpen(false);
   };
@@ -117,7 +132,7 @@ export default function JournalEntry({
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       business: "bg-blue-100 text-blue-800",
       personal: "bg-green-100 text-green-800",
       goals: "bg-purple-100 text-purple-800",
@@ -217,9 +232,9 @@ export default function JournalEntry({
                 </label>
                 <input
                   type="text"
-                  value={formData.tags}
+                  value={formData.tags as any as string}
                   onChange={(e) =>
-                    setFormData({ ...formData, tags: e.target.value })
+                    setFormData({ ...formData, tags: e.target.value as any })
                   }
                   className="input-field"
                   placeholder="entrepreneur, goals, ideas"
@@ -304,7 +319,7 @@ export default function JournalEntry({
           entries
             .slice()
             .reverse()
-            .map((entry, index) => (
+            .map((entry: JournalEntryType, index: number) => (
               <motion.div
                 key={entry.id}
                 initial={{ opacity: 0, y: 20 }}

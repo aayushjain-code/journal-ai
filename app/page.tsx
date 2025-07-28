@@ -28,10 +28,35 @@ import {
   importData,
 } from "@/utils/storage";
 
+// Define types for our data structures
+interface JournalEntry {
+  id: number;
+  title: string;
+  content: string;
+  mood: number;
+  energy: number;
+  category: string;
+  tags: string[];
+  timestamp: string;
+}
+
+interface Goal {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  targetDate?: string;
+  progress: number;
+  completed: boolean;
+  createdAt: string;
+  milestones?: any[];
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("journal");
-  const [entries, setEntries] = useState([]);
-  const [goals, setGoals] = useState([]);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Enhanced localStorage functions
@@ -82,7 +107,7 @@ export default function Home() {
     setIsLoading(false);
   }, []);
 
-  const saveEntry = (entry: any) => {
+  const saveEntry = (entry: Omit<JournalEntry, "id" | "timestamp">) => {
     const newEntries = [
       ...entries,
       { ...entry, id: Date.now(), timestamp: new Date().toISOString() },
@@ -94,7 +119,10 @@ export default function Home() {
     }
   };
 
-  const updateEntry = (entryId: number, updatedEntry: any) => {
+  const updateEntry = (
+    entryId: number,
+    updatedEntry: Partial<JournalEntry>
+  ) => {
     const newEntries = entries.map((entry) =>
       entry.id === entryId ? { ...entry, ...updatedEntry } : entry
     );
@@ -110,7 +138,9 @@ export default function Home() {
     toast.success("Entry deleted successfully!");
   };
 
-  const saveGoal = (goal: any) => {
+  const saveGoal = (
+    goal: Omit<Goal, "id" | "createdAt" | "progress" | "completed">
+  ) => {
     const newGoals = [
       ...goals,
       {
@@ -128,7 +158,7 @@ export default function Home() {
     }
   };
 
-  const updateGoal = (goalId: number, updatedGoal: any) => {
+  const updateGoal = (goalId: number, updatedGoal: Partial<Goal>) => {
     const newGoals = goals.map((goal) =>
       goal.id === goalId ? { ...goal, ...updatedGoal } : goal
     );

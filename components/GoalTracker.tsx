@@ -17,10 +17,25 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+export interface GoalType {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  targetDate?: string;
+  progress: number;
+  completed: boolean;
+  createdAt: string;
+  milestones?: any[];
+}
+
 interface GoalTrackerProps {
-  goals: any[];
-  onSave: (goal: any) => void;
-  onUpdate?: (goalId: number, updatedGoal: any) => void;
+  goals: GoalType[];
+  onSave: (
+    goal: Omit<GoalType, "id" | "createdAt" | "progress" | "completed">
+  ) => void;
+  onUpdate?: (goalId: number, updatedGoal: Partial<GoalType>) => void;
   onDelete?: (goalId: number) => void;
 }
 
@@ -31,8 +46,10 @@ export default function GoalTracker({
   onDelete,
 }: GoalTrackerProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [editingGoal, setEditingGoal] = useState<GoalType | null>(null);
+  const [formData, setFormData] = useState<
+    Omit<GoalType, "id" | "createdAt" | "progress" | "completed">
+  >({
     title: "",
     description: "",
     category: "business",
@@ -70,7 +87,7 @@ export default function GoalTracker({
     setIsFormOpen(false);
   };
 
-  const handleEdit = (goal: any) => {
+  const handleEdit = (goal: GoalType) => {
     setEditingGoal(goal);
     setFormData({
       title: goal.title,
@@ -114,7 +131,7 @@ export default function GoalTracker({
   };
 
   const getPriorityColor = (priority: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       high: "bg-red-100 text-red-800",
       medium: "bg-yellow-100 text-yellow-800",
       low: "bg-green-100 text-green-800",
@@ -123,7 +140,7 @@ export default function GoalTracker({
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       business: "bg-blue-100 text-blue-800",
       personal: "bg-green-100 text-green-800",
       health: "bg-purple-100 text-purple-800",
@@ -133,7 +150,7 @@ export default function GoalTracker({
     return colors[category] || colors.business;
   };
 
-  const calculateProgress = (goal: any) => {
+  const calculateProgress = (goal: GoalType) => {
     if (!goal.milestones || goal.milestones.length === 0)
       return goal.progress || 0;
     const completed = goal.milestones.filter((m: any) => m.completed).length;
@@ -292,7 +309,7 @@ export default function GoalTracker({
             </p>
           </div>
         ) : (
-          goals.map((goal, index) => {
+          goals.map((goal: GoalType, index: number) => {
             const progress = calculateProgress(goal);
             const daysRemaining = goal.targetDate
               ? getDaysRemaining(goal.targetDate)
@@ -357,7 +374,9 @@ export default function GoalTracker({
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="w-4 h-4 mr-1" />
                       <span>
-                        {daysRemaining > 0
+                        {daysRemaining === null
+                          ? "No deadline"
+                          : daysRemaining > 0
                           ? `${daysRemaining} days remaining`
                           : daysRemaining < 0
                           ? `${Math.abs(daysRemaining)} days overdue`
