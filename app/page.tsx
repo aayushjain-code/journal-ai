@@ -63,6 +63,7 @@ export default function Home() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Enhanced localStorage functions
   const saveToLocalStorage = (key: string, data: any) => {
@@ -308,6 +309,10 @@ export default function Home() {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -337,6 +342,8 @@ export default function Home() {
           onExport={handleExportData}
           onImport={handleImport}
           onClear={handleClearLocalStorage}
+          isOpen={sidebarOpen}
+          onToggle={toggleSidebar}
         />
 
         <main className="flex-1 p-6">
