@@ -1,12 +1,14 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import VersionInfo from "@/components/VersionInfo";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Personal Journal - AI Enhanced Life Vision",
-  description: "Document your entrepreneurial journey with AI-powered insights",
+  title: "AI Personal Journal",
+  description:
+    "Your AI-enhanced personal journal for life tracking and insights",
 };
 
 export default function RootLayout({
@@ -16,9 +18,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-gray-50 min-h-screen`}>
+      <body className={inter.className}>
         {children}
         <Toaster position="top-right" />
+        <VersionInfo />
       </body>
     </html>
   );
