@@ -30,6 +30,7 @@ import {
 } from "@/utils/storage";
 import HealthFitness from "@/components/HealthFitness";
 import Finance from "@/components/Finance";
+import OnboardingForm from "@/components/OnboardingForm";
 
 // Define types for our data structures
 interface JournalEntry {
@@ -61,6 +62,7 @@ export default function Home() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Enhanced localStorage functions
   const saveToLocalStorage = (key: string, data: any) => {
@@ -99,12 +101,18 @@ export default function Home() {
     // Load saved data from localStorage with error handling
     const savedEntries = loadFromLocalStorage(STORAGE_KEYS.JOURNAL_ENTRIES);
     const savedGoals = loadFromLocalStorage(STORAGE_KEYS.GOALS);
+    const onboardingCompleted = localStorage.getItem("onboardingCompleted");
 
     if (savedEntries && Array.isArray(savedEntries)) {
       setEntries(savedEntries);
     }
     if (savedGoals && Array.isArray(savedGoals)) {
       setGoals(savedGoals);
+    }
+
+    // Check if onboarding is completed
+    if (!onboardingCompleted) {
+      setShowOnboarding(true);
     }
 
     setIsLoading(false);
@@ -234,6 +242,19 @@ export default function Home() {
     input.click();
   };
 
+  const handleOnboardingComplete = (data: any) => {
+    localStorage.setItem("onboardingData", JSON.stringify(data));
+    localStorage.setItem("onboardingCompleted", "true");
+    setShowOnboarding(false);
+    toast.success("Welcome! Your personalized journal is ready.");
+  };
+
+  const handleOnboardingSkip = () => {
+    localStorage.setItem("onboardingCompleted", "true");
+    setShowOnboarding(false);
+    toast.success("You can always complete onboarding later from settings.");
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "journal":
@@ -289,27 +310,36 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your journal...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onExport={handleExportData}
-        onImport={handleImport}
-        onClear={handleClearLocalStorage}
+  if (showOnboarding) {
+    return (
+      <OnboardingForm
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
       />
+    );
+  }
 
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onExport={handleExportData}
+          onImport={handleImport}
+          onClear={handleClearLocalStorage}
+        />
+
+        <main className="flex-1 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -326,8 +356,8 @@ export default function Home() {
           </motion.div>
 
           {renderContent()}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
