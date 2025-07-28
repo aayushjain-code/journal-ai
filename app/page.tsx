@@ -35,6 +35,7 @@ import HealthFitness from "@/components/HealthFitness";
 import Finance from "@/components/Finance";
 import OnboardingForm from "@/components/OnboardingForm";
 import ProfilePage from "@/components/ProfilePage";
+import DesktopFeatures from "@/components/DesktopFeatures";
 
 // Define types for our data structures
 interface JournalEntry {
@@ -297,6 +298,7 @@ export default function Home() {
               entries={entries}
             />
             <StorageInfo />
+            <DesktopFeatures />
           </div>
         );
       case "goals":
@@ -322,6 +324,7 @@ export default function Home() {
               goals={goals}
             />
             <StorageInfo />
+            <DesktopFeatures />
           </div>
         );
       case "insights":
