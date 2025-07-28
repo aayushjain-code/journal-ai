@@ -29,6 +29,7 @@ import {
   clearAllData,
   exportData,
   importData,
+  initializeStorage,
 } from "@/utils/storage";
 import HealthFitness from "@/components/HealthFitness";
 import Finance from "@/components/Finance";
@@ -102,10 +103,23 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Initialize enhanced storage system
+    const initStorage = async () => {
+      try {
+        await initializeStorage();
+      } catch (error) {
+        console.warn("Enhanced storage not available:", error);
+      }
+    };
+
+    initStorage();
+
     // Load saved data from localStorage with error handling
     const savedEntries = loadFromLocalStorage(STORAGE_KEYS.JOURNAL_ENTRIES);
     const savedGoals = loadFromLocalStorage(STORAGE_KEYS.GOALS);
-    const onboardingCompleted = localStorage.getItem("onboardingCompleted");
+    const onboardingCompleted = localStorage.getItem(
+      STORAGE_KEYS.ONBOARDING_COMPLETED
+    );
 
     if (savedEntries && Array.isArray(savedEntries)) {
       setEntries(savedEntries);

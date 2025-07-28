@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Database, HardDrive, FileText, Target, Info } from "lucide-react";
+import { Database, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { getStorageInfo } from "@/utils/storage";
 
 export default function StorageInfo() {
@@ -15,78 +15,137 @@ export default function StorageInfo() {
 
   if (!storageInfo) return null;
 
-  const storagePercentage = (storageInfo.totalSize / storageInfo.maxSize) * 100;
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const getUsageColor = (percentage: number) => {
+    if (percentage > 80) return "text-red-600";
+    if (percentage > 60) return "text-yellow-600";
+    return "text-green-600";
+  };
+
+  const getUsageBarColor = (percentage: number) => {
+    if (percentage > 80) return "bg-red-500";
+    if (percentage > 60) return "bg-yellow-500";
+    return "bg-green-500";
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card bg-gradient-to-r from-blue-50 to-purple-50"
+      className="card"
     >
-      <div className="flex items-center mb-4">
-        <Database className="w-5 h-5 text-blue-600 mr-2" />
-        <h3 className="text-lg font-semibold text-gray-900">
-          Storage Information
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <Database className="w-5 h-5 text-primary-600" />
+          <h3 className="font-semibold text-gray-900">Storage Information</h3>
+        </div>
+        {storageInfo.isNearLimit ? (
+          <AlertTriangle className="w-5 h-5 text-red-500" />
+        ) : (
+          <CheckCircle className="w-5 h-5 text-green-500" />
+        )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">
-            {storageInfo.entriesCount}
+      <div className="space-y-4">
+        {/* Storage Usage */}
+        <div>
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-600">Storage Usage</span>
+            <span
+              className={`font-medium ${getUsageColor(
+                storageInfo.usagePercentage
+              )}`}
+            >
+              {storageInfo.usagePercentage}%
+            </span>
           </div>
-          <div className="text-sm text-gray-600">Journal Entries</div>
-        </div>
-
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">
-            {storageInfo.goalsCount}
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className={`h-2 rounded-full transition-all duration-300 ${getUsageBarColor(
+                storageInfo.usagePercentage
+              )}`}
+              style={{
+                width: `${Math.min(storageInfo.usagePercentage, 100)}%`,
+              }}
+            />
           </div>
-          <div className="text-sm text-gray-600">Goals</div>
-        </div>
-
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600">
-            {(storageInfo.totalSize / 1024).toFixed(1)}KB
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>{formatBytes(storageInfo.totalSize)} used</span>
+            <span>{formatBytes(storageInfo.maxSize)} total</span>
           </div>
-          <div className="text-sm text-gray-600">Used Space</div>
         </div>
 
-        <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">
-            {storagePercentage.toFixed(1)}%
+        {/* Data Counts */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="font-medium text-gray-900">
+              {storageInfo.entriesCount}
+            </div>
+            <div className="text-gray-600">Journal Entries</div>
           </div>
-          <div className="text-sm text-gray-600">Storage Used</div>
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="font-medium text-gray-900">
+              {storageInfo.goalsCount}
+            </div>
+            <div className="text-gray-600">Goals</div>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="font-medium text-gray-900">
+              {storageInfo.healthDataCount}
+            </div>
+            <div className="text-gray-600">Health Records</div>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="font-medium text-gray-900">
+              {storageInfo.financeDataCount}
+            </div>
+            <div className="text-gray-600">Finance Records</div>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-4">
-        <div className="flex justify-between text-sm text-gray-600 mb-1">
-          <span>Storage Usage</span>
-          <span>
-            {(storageInfo.totalSize / 1024).toFixed(1)}KB /{" "}
-            {(storageInfo.maxSize / 1024 / 1024).toFixed(1)}MB
-          </span>
+        {/* Storage Type */}
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <Info className="w-4 h-4" />
+          <span>{storageInfo.storageType}</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${Math.min(storagePercentage, 100)}%` }}
-          />
-        </div>
-      </div>
 
-      <div className="mt-4 p-3 bg-blue-100 rounded-lg">
-        <div className="flex items-start">
-          <Info className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Local Storage</p>
-            <p>
-              All your data is stored locally in your browser. This ensures
-              privacy and works offline. You can export your data anytime for
-              backup.
+        {/* Warning for near limit */}
+        {storageInfo.isNearLimit && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium text-red-800">
+                Storage nearly full
+              </span>
+            </div>
+            <p className="text-xs text-red-700 mt-1">
+              Consider exporting your data or clearing old entries to free up
+              space.
             </p>
           </div>
+        )}
+
+        {/* Storage Tips */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center space-x-2 mb-2">
+            <Info className="w-4 h-4 text-blue-500" />
+            <span className="text-sm font-medium text-blue-800">
+              Storage Tips
+            </span>
+          </div>
+          <ul className="text-xs text-blue-700 space-y-1">
+            <li>• Data is compressed to save space</li>
+            <li>• Export regularly to backup your data</li>
+            <li>• Clear old entries to free up space</li>
+            <li>• IndexedDB provides additional storage when available</li>
+          </ul>
         </div>
       </div>
     </motion.div>
