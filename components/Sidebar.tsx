@@ -13,6 +13,8 @@ import {
   Upload,
   Trash2,
   FileText,
+  Activity,
+  DollarSign,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +42,8 @@ export default function Sidebar({
     { id: "vision", label: "Vision Board", icon: Eye },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "coach", label: "Life Coach", icon: User },
+    { id: "health", label: "Health & Fitness", icon: Activity },
+    { id: "finance", label: "Finance", icon: DollarSign },
   ];
 
   const handleImport = () => {

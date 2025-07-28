@@ -28,6 +28,8 @@ import {
   exportData,
   importData,
 } from "@/utils/storage";
+import HealthFitness from "@/components/HealthFitness";
+import Finance from "@/components/Finance";
 
 // Define types for our data structures
 interface JournalEntry {
@@ -266,6 +268,10 @@ export default function Home() {
         return <Analytics entries={entries} goals={goals} />;
       case "coach":
         return <LifeCoach entries={entries} goals={goals} />;
+      case "health":
+        return <HealthFitness entries={entries} goals={goals} />;
+      case "finance":
+        return <Finance entries={entries} goals={goals} />;
       default:
         return (
           <div className="space-y-6">
