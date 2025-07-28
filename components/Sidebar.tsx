@@ -94,8 +94,9 @@ export default function Sidebar({
       {/* Toggle Button - Always Visible */}
       <button
         onClick={onToggle}
-        className="fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        className="fixed top-4 left-4 z-[9999] bg-white p-2.5 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
         title={isOpen ? "Close Sidebar" : "Open Sidebar"}
+        style={{ zIndex: 9999 }}
       >
         {isOpen ? (
           <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -118,124 +119,116 @@ export default function Sidebar({
       </AnimatePresence>
 
       {/* Sidebar */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.aside
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            exit={{ x: -300 }}
-            transition={{ type: "spring", damping: 20, stiffness: 100 }}
-            className="fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-200 shadow-lg lg:shadow-none"
-          >
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      AI Personal Journal
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                      Your life, documented
-                    </p>
-                  </div>
-                  <button
-                    onClick={onToggle}
-                    className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <nav className="flex-1 p-4 space-y-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      onTabChange(tab.id);
-                      // Close sidebar on mobile after navigation
-                      if (window.innerWidth < 1024) {
-                        onToggle();
-                      }
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? "bg-primary-100 text-primary-700 border border-primary-200"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <tab.icon className="w-5 h-5" />
-                    <span className="font-medium">{tab.label}</span>
-                  </button>
-                ))}
-              </nav>
-
-              {/* Data Management */}
-              <div className="p-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowDataManagement(!showDataManagement)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+      <motion.aside
+        initial={false}
+        animate={{ width: isOpen ? 320 : 80 }}
+        transition={{ type: "spring", damping: 20, stiffness: 100 }}
+        className="fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 bg-white border-r border-gray-200 shadow-lg lg:shadow-none overflow-hidden"
+      >
+        <div className="flex flex-col h-full">
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  onTabChange(tab.id);
+                  // Close sidebar on mobile after navigation
+                  if (window.innerWidth < 1024) {
+                    onToggle();
+                  }
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-primary-100 text-primary-700 border border-primary-200"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                title={isOpen ? tab.label : tab.label}
+              >
+                <tab.icon className="w-5 h-5 flex-shrink-0" />
+                <span
+                  className={`font-medium transition-opacity duration-200 ${
+                    isOpen ? "opacity-100" : "opacity-0"
+                  }`}
                 >
-                  <span className="font-medium">Data Management</span>
-                  <motion.div
-                    animate={{ rotate: showDataManagement ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </motion.div>
-                </button>
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </nav>
 
-                <AnimatePresence>
-                  {showDataManagement && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-2 space-y-2"
-                    >
-                      <button
-                        onClick={onExport}
-                        className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Export Data</span>
-                      </button>
-                      <button
-                        onClick={handleImport}
-                        className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <Upload className="w-4 h-4" />
-                        <span>Import Data</span>
-                      </button>
-                      <button
-                        onClick={handleClearData}
-                        className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Clear All Data</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
+          {/* Data Management */}
+          <div className="p-4 border-t border-gray-200">
+            <button
+              onClick={() => setShowDataManagement(!showDataManagement)}
+              className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title={isOpen ? "Data Management" : "Data Management"}
+            >
+              <span
+                className={`font-medium transition-opacity duration-200 ${
+                  isOpen ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                Data Management
+              </span>
+              <motion.div
+                animate={{ rotate: showDataManagement ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className={`transition-opacity duration-200 ${
+                  isOpen ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {showDataManagement && isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 space-y-2"
+                >
+                  <button
+                    onClick={onExport}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Export Data</span>
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Import Data</span>
+                  </button>
+                  <button
+                    onClick={handleClearData}
+                    className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All Data</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.aside>
     </>
   );
 }

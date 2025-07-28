@@ -11,6 +11,8 @@ import {
   Plus,
   Search,
   Filter,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import JournalEntry from "@/components/JournalEntry";
 import GoalTracker from "@/components/GoalTracker";
@@ -353,6 +355,22 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Main Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  AI Personal Journal
+                </h1>
+                <p className="text-sm text-gray-600">Your life, documented</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="flex">
         <Sidebar
           activeTab={activeTab}
@@ -364,7 +382,26 @@ export default function Home() {
           onToggle={toggleSidebar}
         />
 
-        <main className="flex-1 p-6">{renderContent()}</main>
+        <main className={`flex-1 ${!sidebarOpen ? "lg:pl-20" : ""}`}>
+          <div className="p-6">
+            {/* Fallback Toggle Button for Mobile */}
+            <div className="lg:hidden mb-6">
+              <button
+                onClick={toggleSidebar}
+                className="bg-white p-2.5 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                title={sidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+              >
+                {sidebarOpen ? (
+                  <ChevronLeft className="w-5 h-5 text-gray-700" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-gray-700" />
+                )}
+              </button>
+            </div>
+
+            {renderContent()}
+          </div>
+        </main>
       </div>
     </div>
   );
